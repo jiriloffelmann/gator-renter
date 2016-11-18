@@ -10,16 +10,32 @@
             "name": "Alex Aichinger",
             "role": "Developer"
         },
-	{
-	    "name": "Cheng Li",
-	    "role":"Developer"
-	},
+        {
+            "name": "Cheng Li",
+            "role": "Developer"
+        },
         {
             "name": "Darrel Daquigan",
             "role": "Developer"
         },
         {
             "name": "Jiri Loffelmann",
+            "role": "Developer"
+        },
+        {
+            "name": "Manasés Galindo",
+            "role": "Developer"
+        },
+        {
+            "name": "Intesar Haider",
+            "role": "Developer"
+        },
+        {
+            "name": "Anil Manzoor",
+            "role": "Developer"
+        },
+        {
+            "name": "Hassaan Rana",
             "role": "Developer"
         }
     ],
