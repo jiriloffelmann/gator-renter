@@ -7,16 +7,24 @@
  *  - Manasés Galindo
  *  - Anil Manzoor
  */
-app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 'Apartment', 'Upload', '$http', 'GHelper',
-    function ($location, $scope, $rootScope, store, Apartment, Upload, $http, GHelper) {
+app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 'Apartment', 'Upload', '$http', 'GHelper', '$timeout',
+            function ($location, $scope, $rootScope, store, Apartment, Upload, $http, GHelper, $timeout) {
 
 
     $scope.helper = GHelper;
-
     $scope.helper.isUserAuthorized($location, $rootScope);
 
     $rootScope.successMessage = "";
     $rootScope.showSuccessMessage = false;
+
+    $rootScope.showSuccessMessageFunc = function (message) {
+        $rootScope.successMessage = message;
+        $rootScope.showSuccessMessage = true;
+        $timeout(function () {
+            $rootScope.showSuccessMessage = false;
+        }, 2000);
+    };
+
 
     $scope.showPreloader = true;
     $scope.loadingOwnerApartments = true;
@@ -31,6 +39,7 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
         Apartment.query({owner_id: store.get('profile')['user_id']}).$promise.then(function (data) {
             $scope.ownerApartments = data;
             $scope.loadingOwnerApartments = false;
+            $rootScope.checkForNewMessages();
         });
     }
     if (store.get('info_profile') != null) {
@@ -40,9 +49,11 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
     $rootScope.newApt = {};
     $rootScope.errorFields = undefined;
 
-    $rootScope.showlogin = false;
+    $rootScope.showLogin = false;
     $rootScope.showSignup = false;
     $rootScope.showPost = false;
+
+    $rootScope.newMsg = {};
     $rootScope.hasNewMessages = false;
     $rootScope.showConversation = false;
 
@@ -83,15 +94,14 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
                         response.data.first_name + " " + response.data.last_name,
                         response.data.first_name,
                         response.data.last_name,
-                        response.data.user_roles_id, 
-                        response.data.address, 
+                        response.data.user_roles_id,
+                        response.data.address,
                         response.data.city,
                         response.data.email);
                     $rootScope.setProfile($rootScope.username, response.data.uid,
                         response.data.first_name + " " + response.data.last_name, response.data.user_roles_id);
+                    $rootScope.showSuccessMessageFunc("Logged in !");
                     $rootScope.loginMessage = '';
-                    $rootScope.successMessage = "You are successfully logged in! ";
-                    $rootScope.showSuccessMessage = true;
                     $rootScope.showLogin = false;
                     $rootScope.checkForNewMessages();
                 }
@@ -131,12 +141,12 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
                         response.data.data.email);
                     $rootScope.updateMessage = 'Saved Changes';
             }
-            , 
+            ,
             function errorCallback(response) {
                 // called asynchronously if an error occurs
                 $rootScope.updateMessage = 'Error saving changes! Please try later.';
             }
-                    );
+        );
     };
 
     $rootScope.logout = function () {
@@ -148,8 +158,7 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
             // this callback will be called asynchronously
             if (response) {
                 if (response.data === 'SUCCESS_LOGOUT') {
-                    $rootScope.successMessage = "You are successfully Logged out! ";
-                    $rootScope.showSuccessMessage = true;
+                    $rootScope.showSuccessMessageFunc("Logged out!");
                 }
             } else {
                 alert("Unable to logout");
@@ -194,7 +203,7 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
         if (store.get('info_profile') != null) {
                 $rootScope.user_profile = store.get('info_profile');
     }
-    }
+}
 
     $rootScope.signup = function () {
         var errors = "";
@@ -238,7 +247,7 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
                     //store.set('profile', {username: $rootScope.username, user_id: response.data.data.user_id});
                     console.log(response);
                     //console.log("InSignup!");
-                    $rootScope.setInfoProfile($rootScope.username, response.data.data.uid,
+                    $rootScope.setInfoProfile($rootScope.username, response.data.data.user_id,
                         response.data.data.first_name + " " + response.data.data.last_name,
                         response.data.data.first_name,
                         response.data.data.last_name,
@@ -249,8 +258,7 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
                     $rootScope.setProfile($rootScope.username, response.data.data.user_id,
                         response.data.data.first_name + " " + response.data.data.last_name, response.data.data.user_roles_id);
                     $rootScope.loginMessage = '';
-                    $rootScope.successMessage = "Your user has been successfully created and logged in! ";
-                    $rootScope.showSuccessMessage = true;
+                    $rootScope.showSuccessMessageFunc("Registered & Logged-in!");
                     $rootScope.showSignup = false;
                 }, function errorCallback(response) {
                     $rootScope.loginMessage = response.data.reason;
@@ -286,14 +294,20 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
         return store.get('profile') != null ? store.get('profile')['username'] : '';
     };
 
+    $rootScope.getUserID = function () {
+        return store.get('profile') != null ? store.get('profile')['user_id'] : '';
+    }
+
     $rootScope.checkForNewMessages = function () {
-        $http.post('/api/message/getNewMessagesCount', {
-            email: $rootScope.getEmail(),
-        }).success(function (data) {
-            $rootScope.hasNewMessages = data.data.new_messages_count > 0;
-        }).error(function (data) {
-            console.log("Error: " + error.message);
-        });
+        if (store.get('profile') != null) {
+            $http.post('/api/message/getNewMessagesCount', {
+                email: $rootScope.getEmail(),
+            }).success(function (data) {
+                $rootScope.hasNewMessages = data.data.new_messages_count > 0;
+            }).error(function (data) {
+                console.log("Error: " + error.message);
+            });
+        }
     };
 
     $rootScope.postApartment = function () {
@@ -388,6 +402,7 @@ app.controller('homeController', ['$location', '$scope', '$rootScope', 'store', 
 
     $scope.go = function (path) {
         $location.path(path);
+        $rootScope.checkForNewMessages();
     };
 
 }]);
