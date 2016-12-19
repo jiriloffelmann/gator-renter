@@ -15,5 +15,7 @@
         <input ng-class="{error: $root.errorFields.indexOf('address') >= 0}"  class="box" type="text" ng-model="$root.address" placeholder="Street / Number"/>
         <input ng-class="{error: $root.errorFields.indexOf('city') >= 0}"  class="box" type="text" ng-model="$root.city" placeholder="City"/>
         <a ng-click="$root.signup()" class="button green large">Sign up</a>
+        <small ng-click="$root.showTerms = true">By clicking on 'Sign Up' above, you confirm that you accept the Terms of Use</small>
+        <!-- I made a terms.html file, but I am not sure how to make it a popup window like the login and sign up pages -->
     </div>
 </div>
